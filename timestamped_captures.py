@@ -73,7 +73,7 @@ def prose_position(m) -> TextPosition:
 
 
 @mod.capture(
-    rule="<self.one_ended_prose_range> | <self.prose_position> through <self.prose_position>"
+    rule="<self.one_ended_prose_range> | <self.prose_position> past <self.prose_position>"
 )
 def prose_range(m) -> TextRange:
     """A range of onscreen text."""
@@ -87,15 +87,15 @@ def prose_range(m) -> TextRange:
     )
 
 
-@mod.capture(rule="[through] <self.prose_position>")
+@mod.capture(rule="[past] <self.prose_position>")
 def one_ended_prose_range(m) -> TextRange:
     """A range of onscreen text with only start or end specified."""
-    has_through = m[0] == "through"
-    # As a convenience, allow dropping "through" if position is provided.
+    has_through = m[0] == "past"
+    # As a convenience, allow dropping "past" if position is provided.
     if has_through or m.prose_position.position:
         if not m.prose_position.position:
             raise ValueError(
-                'Text range "through <phrase>" not supported because cursor position is unknown.'
+                'Text range "past <phrase>" not supported because cursor position is unknown.'
             )
         return TextRange(
             start=None,
