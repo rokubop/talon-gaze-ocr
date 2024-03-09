@@ -4,6 +4,8 @@ mode: command
 # dictation mode. The following line will have no effect if dictation_command is not defined.
 mode: user.dictation_command
 -
+# Commands that operate wherever you are looking.
+# Example: "eye hover" to hover the cursor over where you're looking.
 (eye | i) (hover | [cursor] move): user.move_cursor_to_gaze_point()
 (eye | i) [left] (touch | click):
     user.move_cursor_to_gaze_point()
@@ -18,6 +20,7 @@ mode: user.dictation_command
 (eye | i) middle (touch | click):
     user.move_cursor_to_gaze_point()
     mouse_click(2)
+# Example: "eye control click" to control-click where you're looking.
 (eye | i) <user.modifiers> (touch | click):
     user.move_cursor_to_gaze_point()
     key("{modifiers}:down")
@@ -49,11 +52,15 @@ mode: user.dictation_command
     user.move_cursor_to_gaze_point(-40, 0)
     user.mouse_scroll_right(0.5)
 
-ocr show [text]:            user.show_ocr_overlay("text", 1)
-ocr show boxes:             user.show_ocr_overlay("boxes", 1)
-(eye | i) move <user.timestamped_prose>$: user.move_cursor_to_word(timestamped_prose)
-^mouse <user.timestamped_prose>$:
-    user.move_cursor_to_word(timestamped_prose)
+# Debugging commands.
+ocr show [text]:            user.show_ocr_overlay("text")
+ocr show [text] near <user.timestamped_prose>: user.show_ocr_overlay("text", timestamped_prose)
+ocr show boxes:             user.show_ocr_overlay("boxes")
+
+# Commands that operate on text nearby where you're looking.
+# Example: "hover seen apple" to hover the cursor over the word "apple".
+(hover (seen | scene) | cursor move) <user.timestamped_prose>$: user.move_cursor_to_word(timestamped_prose)
+# Example: "touch apple" to click the word "apple".
 [left] (touch | click) <user.timestamped_prose>$:
     user.click_text(timestamped_prose)
 [left] double (touch | click) <user.timestamped_prose>$:
@@ -63,25 +70,33 @@ ocr show boxes:             user.show_ocr_overlay("boxes", 1)
 ^middle (touch | click) <user.timestamped_prose>$:
     user.middle_click_text(timestamped_prose)
 <user.modifiers> (touch | click) <user.timestamped_prose>$:
-    user.modifier_click_text(modifiers, timestamped*_prose)
-(eye | i) pre <user.timestamped_prose>$: user.move_text_cursor_to_word(timestamped_prose, "before")
-(eye | i) post <user.timestamped_prose>$: user.move_text_cursor_to_word(timestamped_prose, "after")
-
-(eye | i) {user.ocr_actions} [{user.ocr_modifiers}] <user.prose_range>$:
-    user.perform_ocr_action(ocr_actions, ocr_modifiers or "", prose_range)
-
-(eye | i) take <user.prose_range>$:
+    user.modifier_click_text(modifiers, timestamped_prose)
+# Example: "go before apple" to move the text cursor before the word "apple".
+(eye | i)  pre <user.timestamped_prose>$: user.move_text_cursor_to_word(timestamped_prose, "before")
+(eye | i)  post <user.timestamped_prose>$: user.move_text_cursor_to_word(timestamped_prose, "after")
+# Examples:
+# "select apple" to select the word "apple".
+# "select apple through banana" to select the phrase "apple pear banana".
+# "select through before apple" to select from the text cursor position to before the word "apple".
+select <user.prose_range>$:
     user.perform_ocr_action("select", "", prose_range)
+# Examples:
+# "take seen apple" to select the word "apple".
+# "copy seen apple through banana" to copy the phrase "apple pear banana".
+# "copy all seen apple" to copy all text from the field containing the word "apple".
 {user.ocr_actions} [{user.ocr_modifiers}] (seen | scene) <user.prose_range>$:
     user.perform_ocr_action(ocr_actions, ocr_modifiers or "", prose_range)
+# Example: "replace apple with banana" to replace the word "apple" with the word "banana".
 replace [{user.ocr_modifiers}] [seen | scene] <user.prose_range> with <user.prose>$:
     user.replace_text(ocr_modifiers or "", prose_range, prose)
 (eye | i) pre <user.timestamped_prose> say <user.prose>$:
     user.insert_adjacent_to_text(timestamped_prose, "before", prose)
 (eye | i) post <user.timestamped_prose> say <user.prose>$:
     user.insert_adjacent_to_text(timestamped_prose, "after", prose)
-(eye | i) phones <user.timestamped_prose>$:
+(eye | i) phones [word] (seen | scene) <user.timestamped_prose>$:
     user.change_text_homophone(timestamped_prose)
 
-ocr yes:                    user.connect_ocr_eye_tracker()
-ocr no:                     user.disconnect_ocr_eye_tracker()
+ocr tracker on:             user.connect_ocr_eye_tracker()
+ocr tracker off:            user.disconnect_ocr_eye_tracker()
+
+# More commands are available for Talon Beta users! Simply switch to the "beta" branch.
